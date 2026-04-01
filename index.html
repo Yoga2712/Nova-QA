@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova QA - Ocean Theme</title>
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        :root {
+            /* Ocean Palette & Dark Theme */
+            --bg-color-1: #000c18;
+            --bg-color-2: #01284a;
+            --text-color: #e0f2fe;
+            --text-muted: #8cb6d4;
+            
+            --accent-cyan: #00e4ff;
+            --accent-teal: #0ae2c4;
+            --accent-blue: #0077ff;
+            
+            /* Solid background for history, no blur */
+            --panel-bg: #032541; 
+            
+            /* Glass elements for main UI cards */
+            --glass-bg: rgba(0, 36, 71, 0.6);
+            --glass-border: rgba(0, 228, 255, 0.2);
+            --shadow-glow: 0 4px 20px rgba(0, 228, 255, 0.2);
+            
+            --card-radius: 16px;
+        }
+
+        [data-theme="light"] {
+            /* Shallow Water Light Theme */
+            --bg-color-1: #e0f2fe;
+            --bg-color-2: #bfdbfe;
+            --text-color: #032541;
+            --text-muted: #335d7a;
+            
+            --accent-cyan: #0284c7;  /* Darker cyan/blue for visibility */
+            --accent-teal: #0369a1;  /* Darker teal for badges/text */
+            --accent-blue: #0ea5e9;  /* Bright blue for contrast elements */
+            
+            --panel-bg: #f0f9ff;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(3, 37, 65, 0.15);
+            --shadow-glow: 0 4px 15px rgba(0, 119, 255, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(180deg, var(--bg-color-1) 0%, var(--bg-color-2) 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+            transition: background 0.8s ease, color 0.5s ease;
+            position: relative;
+        }
+
+        /* Ocean Bubble Effects */
+        .bubbles-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none; overflow: hidden;
+        }
+        .bubble {
+            position: absolute;
+            bottom: -50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            animation: rise linear infinite;
+        }
+        [data-theme="light"] .bubble {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+        @keyframes rise {
+            0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; transform: translateY(calc(-100vh + 50px)) translateX(20px) scale(1.2); }
+            100% { transform: translateY(-100vh) translateX(-10px) scale(1.5); opacity: 0; }
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+        }
+
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(135deg, var(--bg-color-2), var(--bg-color-1));
+            z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        #login-overlay.hidden {
+            opacity: 0;
+            transform: scale(1.05);
+            pointer-events: none;
+        }
+        .login-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 40px; border-radius: 20px; text-align: center;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 90%; max-width: 380px;
+            animation: float 4s ease-in-out infinite alternate;
+        }
+        @keyframes float {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+        .login-logo {
+            font-size: 2.5rem; font-weight: 800; cursor: default;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-teal));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+        .login-card p { color: var(--text-muted); margin-bottom: 30px; font-size: 0.95rem; }
+        .login-input {
+            width: 100%; padding: 14px 16px; margin-bottom: 16px;
+            background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
+            border-radius: 8px; color: var(--text-color); outline: none; transition: 0.3s;
+        }
+        .login-input::placeholder { color: var(--text-muted); opacity: 0.8; }
+        [data-theme="light"] .login-input { background: rgba(255,255,255,0.6); border-color: rgba(0,0,0,0.2); }
+        .login-input:focus { border-color: var(--accent-teal); box-shadow: 0 0 10px rgba(10, 226, 196, 0.3); }
+        .btn-ocean {
+            width: 100%; padding: 14px;
+            background: linear-gradient(45deg, var(--accent-blue), var(--accent-teal));
+            border: none; border-radius: 8px; color: white;
+            font-weight: 600; font-size: 1.1rem; cursor: pointer;
+            transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0, 119, 255, 0.3);
+        }
+        .btn-ocean:hover {
+            transform: translateY(-2px); box-shadow: 0 8px 25px rgba(10, 226, 196, 0.5);
+        }
+
+        /* Sidebar History - NO BLUR */
+        .sidebar {
+            width: 320px;
+            min-width: 320px;
+            background: var(--panel-bg); /* Solid color, no blur */
+            border-right: 1px solid var(--glass-border);
+            padding: 24px;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+        .sidebar h2 {
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-teal);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .history-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .history-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 16px; border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            cursor: pointer; position: relative;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        [data-theme="light"] .history-item { background: rgba(255, 255, 255, 0.5); }
+        .history-item:hover {
+            transform: translateX(5px);
+            border-color: var(--accent-cyan);
+            border-left: 4px solid var(--accent-teal);
+        }
+        .history-title {
+            font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 20px;
+        }
+        .history-date { font-size: 0.75rem; color: var(--text-muted); }
+        .history-delete {
+            position: absolute; top: 12px; right: 12px;
+            background: transparent; border: none;
+            color: #ef4444; font-size: 1.2rem;
+            cursor: pointer; opacity: 0; transition: 0.2s;
+        }
+        .history-item:hover .history-delete { opacity: 1; }
+        .history-delete:hover { transform: scale(1.2); }
+
+        /* Main Content */
+        .main-content {
+            flex: 1; padding: 40px; height: 100vh; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 32px;
+            /* Scrollbar styling */
+            scrollbar-width: thin; scrollbar-color: var(--accent-blue) rgba(0,0,0,0.1);
+        }
+        .main-content::-webkit-scrollbar { width: 8px; }
+        .main-content::-webkit-scrollbar-thumb { background-color: var(--accent-blue); border-radius: 10px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        .logo {
+            font-size: 2.2rem; font-weight: 800; cursor: pointer;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-teal));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(0, 228, 255, 0.2);
+            background-size: 200% auto;
+            animation: textShimmer 4s linear infinite;
+        }
+        @keyframes textShimmer { to { background-position: 200% center; } }
+
+        /* Theme Switch */
+        .theme-switch {
+            width: 60px; height: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px; border: 1px solid var(--glass-border);
+            position: relative; cursor: pointer;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+        [data-theme="light"] .theme-switch { background: rgba(0,0,0,0.1); }
+        .theme-knob {
+            width: 24px; height: 24px; background: var(--accent-teal);
+            border-radius: 50%; position: absolute; top: 2px; left: 2px;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 10px var(--accent-teal);
+        }
+        [data-theme="light"] .theme-switch .theme-knob {
+            left: 32px; background: var(--accent-blue);
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
+
+        /* Upload Zone */
+        .upload-card {
+            background: var(--glass-bg); backdrop-filter: blur(16px);
+            border: 2px dashed rgba(0, 228, 255, 0.4); border-radius: var(--card-radius);
+            padding: 60px 40px; text-align: center; cursor: pointer;
+            transition: all 0.4s ease; position: relative; overflow: hidden;
+        }
+        .upload-card:hover, .upload-card.dragover {
+            border-color: var(--accent-teal); background: rgba(0, 228, 255, 0.05);
+            box-shadow: 0 0 30px rgba(10, 226, 196, 0.15); transform: translateY(-5px);
+        }
+        .upload-card.processing {
+            border: 2px solid transparent; pointer-events: none;
+            background: linear-gradient(var(--bg-color-1), var(--bg-color-1)) padding-box,
+                        linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-teal)) border-box;
+            animation: waterPulse 2s infinite linear;
+        }
+        @keyframes waterPulse {
+            0% { box-shadow: 0 0 0 rgba(0, 228, 255, 0.4); opacity: 0.8; }
+            50% { box-shadow: 0 0 40px rgba(0, 228, 255, 0.3); opacity: 1; }
+            100% { box-shadow: 0 0 0 rgba(0, 228, 255, 0.4); opacity: 0.8; }
+        }
+
+        .upload-icon {
+            font-size: 3rem; margin-bottom: 16px; display: inline-block;
+            filter: drop-shadow(0 0 10px var(--accent-cyan));
+        }
+        .upload-card:hover .upload-icon { animation: floatIcon 2s infinite ease-in-out; }
+        @keyframes floatIcon {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .upload-text { font-size: 1.25rem; font-weight: 500; margin-bottom: 8px; color: var(--accent-cyan); }
+        .upload-hint { font-size: 0.9rem; color: var(--text-muted); }
+        #pdf-upload { display: none; }
+
+        /* Loader */
+        .loader-container {
+            display: none; flex-direction: column; align-items: center; gap: 16px; margin-top: 20px;
+        }
+        .loader-water {
+            width: 60px; height: 60px; border-radius: 50%;
+            border: 4px solid rgba(0, 228, 255, 0.2);
+            border-top: 4px solid var(--accent-cyan);
+            border-left: 4px solid var(--accent-teal);
+            animation: spinFast 1s linear infinite;
+        }
+        @keyframes spinFast { 100% { transform: rotate(360deg); } }
+        .loader-text { color: var(--accent-cyan); font-weight: 600; letter-spacing: 1px; }
+
+        /* Results */
+        .results-area {
+            display: none; flex-direction: column; gap: 24px;
+            animation: riseUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes riseUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .metadata-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+        .badge {
+            background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border);
+            padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 500;
+            color: var(--accent-cyan); display: flex; align-items: center; gap: 6px;
+        }
+        [data-theme="light"] .badge { background: rgba(0,0,0,0.08); border-color: rgba(0,0,0,0.15); color: var(--accent-teal); }
+
+        .glass-card {
+            background: var(--glass-bg); backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border); border-radius: var(--card-radius);
+            padding: 32px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative; overflow: hidden; transition: 0.3s;
+        }
+        .glass-card:hover { border-color: rgba(0, 228, 255, 0.4); box-shadow: var(--shadow-glow); }
+        .glass-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+        .card-summary::before { background: var(--accent-cyan); }
+        .card-qa::before { background: var(--accent-blue); }
+
+        .card-title {
+            font-size: 1.5rem; font-weight: 700; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .card-title.t-cyan { color: var(--accent-cyan); }
+        .card-title.t-blue { color: var(--accent-blue); }
+
+        .summary-content { line-height: 1.8; font-size: 1.05rem; color: var(--text-color); }
+        
+        .qa-list { display: flex; flex-direction: column; gap: 16px; }
+        .qa-item {
+            background: rgba(0, 0, 0, 0.15); border-left: 3px solid var(--accent-teal);
+            padding: 16px 20px; border-radius: 0 8px 8px 0; transition: 0.3s;
+        }
+        [data-theme="light"] .qa-item { background: rgba(255,255,255,0.4); }
+        .qa-item:hover {
+            background: rgba(0, 228, 255, 0.05); transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 228, 255, 0.1);
+        }
+        .qa-q { font-weight: 700; color: var(--accent-teal); margin-bottom: 8px; font-size: 1.1rem; }
+        .qa-a { color: var(--text-color); line-height: 1.6; font-size: 0.95rem; }
+
+        /* Mobile */
+        .mobile-menu-btn {
+            display: none; background: none; border: none; font-size: 2rem; color: var(--text-color); cursor: pointer;
+        }
+        .overlay-bg {
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.5); z-index: 90;
+        }
+        .overlay-bg.active { display: block; }
+
+        @media (max-width: 900px) {
+            .app-container { flex-direction: column; }
+            .sidebar { 
+                position: fixed; top: 0; left: -100%; height: 100vh; z-index: 100;
+                box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+            }
+            .sidebar.open { left: 0; }
+            .mobile-menu-btn { display: block; }
+            .main-content { padding: 20px; }
+            .upload-card { padding: 40px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Bubbles Background -->
+    <div class="bubbles-container" id="bubbles"></div>
+
+    <!-- Login Page Overlay -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <h1 class="login-logo">Nova QA</h1>
+            <p>Dive deep into your documents.</p>
+            <form id="login-form">
+                <input type="email" class="login-input" placeholder="Crew ID / Email" required>
+                <input type="password" class="login-input" placeholder="Passcode" required>
+                <button type="submit" class="btn-ocean">Enter the Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="overlay-bg" id="sidebar-overlay"></div>
+
+    <div class="app-container">
+        <!-- History Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <h2>🌊 Dives</h2>
+            <div class="history-list" id="history-list"></div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <header class="header">
+                <button class="mobile-menu-btn" id="menu-toggle">☰</button>
+                <div class="logo">Nova QA</div>
+                <div class="theme-switch" id="theme-switch" title="Toggle Theme">
+                    <div class="theme-knob"></div>
+                </div>
+            </header>
+
+            <!-- Upload Area -->
+            <div class="upload-card" id="upload-card">
+                <span class="upload-icon">⚓</span>
+                <div class="upload-text">Drop your PDF anchor here</div>
+                <div class="upload-hint">or click to browse your vessel's files</div>
+                <input type="file" id="pdf-upload" accept="application/pdf">
+            </div>
+
+            <!-- Loader -->
+            <div class="loader-container" id="loader">
+                <div class="loader-water"></div>
+                <div class="loader-text">Extracting pearls of wisdom... <span id="progress-text">0%</span></div>
+            </div>
+
+            <!-- Results Data -->
+            <div class="results-area" id="results-area">
+                <div class="metadata-row" id="metadata-badges"></div>
+
+                <div class="glass-card card-summary">
+                    <h3 class="card-title t-cyan">💎 Deep Sea Summary</h3>
+                    <div class="summary-content" id="summary-content"></div>
+                </div>
+
+                <div class="glass-card card-qa">
+                    <h3 class="card-title t-blue">🦑 Intelligent Q&A</h3>
+                    <div class="qa-list" id="qa-list"></div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // Bubble Generator
+        function createBubbles() {
+            const container = document.getElementById('bubbles');
+            container.innerHTML = '';
+            const count = window.innerWidth < 768 ? 15 : 30;
+            for (let i = 0; i < count; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                // Random properties
+                const size = Math.random() * 40 + 10;
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = `${Math.random() * 100}vw`;
+                bubble.style.animationDuration = `${Math.random() * 10 + 5}s`;
+                bubble.style.animationDelay = `${Math.random() * 5}s`;
+                container.appendChild(bubble);
+            }
+        }
+        createBubbles();
+        window.addEventListener('resize', () => { setTimeout(createBubbles, 500); });
+
+        // Login Logic
+        const loginForm = document.getElementById('login-form');
+        const loginOverlay = document.getElementById('login-overlay');
+        
+        // Simple check if already logged in this session
+        if (sessionStorage.getItem('nova_qa_logged_in')) {
+            loginOverlay.classList.add('hidden');
+        }
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Store simple session token
+            sessionStorage.setItem('nova_qa_logged_in', 'true');
+            // Animate out
+            loginOverlay.classList.add('hidden');
+        });
+
+        // App Logic Elements
+        const themeSwitch = document.getElementById('theme-switch');
+        const uploadCard = document.getElementById('upload-card');
+        const fileInput = document.getElementById('pdf-upload');
+        const loader = document.getElementById('loader');
+        const progressText = document.getElementById('progress-text');
+        const resultsArea = document.getElementById('results-area');
+        const summaryContent = document.getElementById('summary-content');
+        const qaList = document.getElementById('qa-list');
+        const metadataRow = document.getElementById('metadata-badges');
+        const historyList = document.getElementById('history-list');
+
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+
+        let appHistory = JSON.parse(localStorage.getItem('nova_qa_history') || '[]');
+
+        function init() {
+            renderHistory();
+            const savedTheme = localStorage.getItem('nova_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+        themeSwitch.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('nova_theme', newTheme);
+        });
+
+        menuToggle.addEventListener('click', () => toggleSidebar(true));
+        overlay.addEventListener('click', () => toggleSidebar(false));
+
+        function toggleSidebar(show) {
+            sidebar.classList.toggle('open', show);
+            overlay.classList.toggle('active', show);
+        }
+
+        uploadCard.addEventListener('dragover', (e) => { e.preventDefault(); uploadCard.classList.add('dragover'); });
+        uploadCard.addEventListener('dragleave', () => uploadCard.classList.remove('dragover'));
+        uploadCard.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadCard.classList.remove('dragover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+        uploadCard.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        async function handleFile(file) {
+            if (file.type !== 'application/pdf') {
+                alert('Please upload a valid PDF file.');
+                return;
+            }
+
+            uploadCard.classList.add('processing');
+            loader.style.display = 'flex';
+            resultsArea.style.display = 'none';
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdfContext = await extractTextFromPDF(arrayBuffer);
+                
+                progressText.innerText = 'Distilling drops of truth...';
+                await new Promise(r => setTimeout(r, 1200)); 
+                
+                const { summary, qaPairs } = generateInsights(pdfContext.text);
+                
+                const sessionData = {
+                    id: Date.now().toString(),
+                    filename: file.name,
+                    date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                    pages: pdfContext.pages,
+                    words: pdfContext.wordCount,
+                    summary,
+                    qaPairs
+                };
+
+                saveToHistory(sessionData);
+                displayResults(sessionData);
+
+            } catch (err) {
+                console.error(err);
+                alert('Connection to the reef lost: ' + err.message);
+            } finally {
+                uploadCard.classList.remove('processing');
+                loader.style.display = 'none';
+                fileInput.value = ''; 
+            }
+        }
+
+        async function extractTextFromPDF(arrayBuffer) {
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let fullText = '';
+            const numPages = pdf.numPages;
+
+            for (let i = 1; i <= numPages; i++) {
+                progressText.innerText = `Scanning Depth ${i} of ${numPages}...`;
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                const strings = content.items.map(item => item.str);
+                fullText += strings.join(' ') + '\n';
+            }
+
+            const cleanText = fullText.replace(/\s+/g, ' ').trim();
+            return {
+                text: cleanText,
+                pages: numPages,
+                wordCount: cleanText.split(' ').length
+            };
+        }
+
+        function generateInsights(text) {
+            const sentences = text.match(/[A-Z][^.!?]*[.!?]/g) || [text];
+            const validSentences = sentences.filter(s => s.trim().split(' ').length > 5);
+
+            if (validSentences.length === 0) {
+                return { summary: "The scan returned no viable text from the submerged document.", qaPairs: [] };
+            }
+
+            let summarySentences = [];
+            let step = Math.max(1, Math.floor(validSentences.length / 5));
+            for(let i=0; i < validSentences.length && summarySentences.length < 5; i += step) {
+                summarySentences.push(validSentences[i].trim());
+            }
+            const summary = summarySentences.join(' ');
+
+            const qaPairs = [];
+            const usedIndexes = new Set();
+            let attempts = 0;
+            
+            while (qaPairs.length < 5 && attempts < validSentences.length) {
+                let idx = Math.floor(Math.random() * validSentences.length);
+                attempts++;
+                
+                if (usedIndexes.has(idx)) continue;
+                usedIndexes.add(idx);
+                
+                let sentence = validSentences[idx].trim();
+                let words = sentence.split(' ');
+                let targetWord = words.slice(1, -1).sort((a,b) => b.length - a.length)[0];
+                
+                if (targetWord && targetWord.length > 5 && !targetWord.includes('.')) {
+                    let cleanedWord = targetWord.replace(/[,;"']/g, '');
+                    let q = `What is the significance of "${cleanedWord}"?`;
+                    if (sentence.toLowerCase().includes(' is ')){
+                        q = `How does the document describe ${cleanedWord}?`;
+                    }
+                    qaPairs.push({ q, a: sentence });
+                }
+            }
+
+            if (qaPairs.length === 0) {
+                qaPairs.push({ q: "What is the primary message found?", a: validSentences[0] || "Unknown fragment." });
+            }
+
+            return { summary, qaPairs };
+        }
+
+        function saveToHistory(data) {
+            appHistory.unshift(data);
+            if (appHistory.length > 30) appHistory.pop();
+            localStorage.setItem('nova_qa_history', JSON.stringify(appHistory));
+            renderHistory();
+        }
+
+        function deleteHistory(id, e) {
+            if(e) e.stopPropagation();
+            appHistory = appHistory.filter(h => h.id !== id);
+            localStorage.setItem('nova_qa_history', JSON.stringify(appHistory));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            historyList.innerHTML = '';
+            if (appHistory.length === 0) {
+                historyList.innerHTML = '<div style="color:var(--text-muted); font-size:0.9rem; text-align:center; padding: 20px 0;">No past expeditions.</div>';
+                return;
+            }
+
+            appHistory.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div class="history-title" title="${item.filename}">📄 ${item.filename}</div>
+                    <div class="history-date">${item.date}</div>
+                    <button class="history-delete" data-id="${item.id}" title="Abandon Ship">×</button>
+                `;
+                
+                div.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('history-delete')) {
+                        deleteHistory(e.target.getAttribute('data-id'), e);
+                    } else {
+                        displayResults(item);
+                        if (window.innerWidth <= 900) toggleSidebar(false);
+                    }
+                });
+                
+                historyList.appendChild(div);
+            });
+        }
+
+        function displayResults(data) {
+            metadataRow.innerHTML = `
+                <span class="badge">⚓ ${data.filename}</span>
+                <span class="badge">📑 ${data.pages} Pages</span>
+                <span class="badge">🌊 ${data.words} Words</span>
+            `;
+
+            resultsArea.style.display = 'flex';
+            
+            // Render text
+            summaryContent.innerHTML = `<p>${data.summary}</p>`;
+            
+            // QA rendering
+            qaList.innerHTML = data.qaPairs.map(qa => `
+                <div class="qa-item">
+                    <div class="qa-q">Q: ${qa.q}</div>
+                    <div class="qa-a">A: ${qa.a}</div>
+                </div>
+            `).join('');
+            
+            // Scroll subtly
+            setTimeout(() => {
+                resultsArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+
+        init();
+
+    </script>
+</body>
+</html>
